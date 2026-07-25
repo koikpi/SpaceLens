@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import ctypes
 import gzip
+import hashlib
 import json
 import mimetypes
 import os
@@ -22,6 +23,13 @@ SAVED = ROOT / "saved_scans"
 scan_state = {"running": False, "files": 0, "folders": 0, "bytes": 0, "path": "", "error": None, "result": None}
 lock = threading.Lock()
 cancel_event = threading.Event()
+duplicate_lock = threading.Lock()
+duplicate_cancel = threading.Event()
+duplicate_state = {
+    "running": False, "phase": "", "path": "", "files": 0, "bytes": 0,
+    "candidates": 0, "groups": 0, "reclaimable": 0, "methods": [],
+    "result": None, "error": None, "cancelled": False,
+}
 
 
 def snapshot_path(snapshot_id: str):
@@ -70,6 +78,150 @@ def save_snapshot(name: str, automatic=False):
 def load_snapshot(snapshot_id: str):
     with gzip.open(snapshot_path(snapshot_id), "rt", encoding="utf-8") as stream:
         return json.load(stream)
+
+
+def sample_hash(path: str, size: int):
+    digest = hashlib.blake2b(digest_size=16)
+    chunk = 64 * 1024
+    with open(path, "rb") as stream:
+        positions = [0, max(0, size // 2 - chunk // 2), max(0, size - chunk)]
+        for position in positions:
+            stream.seek(position)
+            digest.update(stream.read(chunk))
+    return digest.hexdigest()
+
+
+def full_hash(path: str):
+    digest = hashlib.sha256()
+    with open(path, "rb") as stream:
+        while not duplicate_cancel.is_set():
+            block = stream.read(1024 * 1024)
+            if not block:
+                break
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def same_content(first: str, second: str):
+    with open(first, "rb") as left, open(second, "rb") as right:
+        while not duplicate_cancel.is_set():
+            a = left.read(1024 * 1024)
+            b = right.read(1024 * 1024)
+            if a != b:
+                return False
+            if not a:
+                return True
+    return False
+
+
+def regroup(groups, key_function):
+    output = []
+    for group in groups:
+        buckets = defaultdict(list)
+        for item in group:
+            if duplicate_cancel.is_set():
+                return []
+            try:
+                buckets[key_function(item)].append(item)
+            except (PermissionError, FileNotFoundError, OSError):
+                continue
+        output.extend(bucket for bucket in buckets.values() if len(bucket) > 1)
+    return output
+
+
+def regroup_by_bytes(groups):
+    output = []
+    for group in groups:
+        exact = []
+        for item in group:
+            if duplicate_cancel.is_set():
+                return []
+            placed = False
+            for bucket in exact:
+                try:
+                    if same_content(bucket[0], item):
+                        bucket.append(item)
+                        placed = True
+                        break
+                except (PermissionError, FileNotFoundError, OSError):
+                    placed = True
+                    break
+            if not placed:
+                exact.append([item])
+        output.extend(bucket for bucket in exact if len(bucket) > 1)
+    return output
+
+
+def run_duplicate_scan(path: str, methods, min_size: int):
+    duplicate_cancel.clear()
+    with duplicate_lock:
+        duplicate_state.update({
+            "running": True, "phase": "正在按大小分组", "path": path, "files": 0,
+            "bytes": 0, "candidates": 0, "groups": 0, "reclaimable": 0,
+            "methods": methods, "result": None, "error": None, "cancelled": False,
+        })
+    try:
+        by_size = defaultdict(list)
+        for folder, dirs, files in os.walk(path, followlinks=False):
+            if duplicate_cancel.is_set():
+                break
+            dirs[:] = [name for name in dirs if not os.path.islink(os.path.join(folder, name))]
+            for name in files:
+                if duplicate_cancel.is_set():
+                    break
+                file_path = os.path.join(folder, name)
+                try:
+                    if os.path.islink(file_path):
+                        continue
+                    size = os.path.getsize(file_path)
+                    if size >= min_size:
+                        by_size[size].append(file_path)
+                    with duplicate_lock:
+                        duplicate_state["files"] += 1
+                        duplicate_state["bytes"] += size
+                except (PermissionError, FileNotFoundError, OSError):
+                    continue
+        groups = [items for items in by_size.values() if len(items) > 1]
+        with duplicate_lock:
+            duplicate_state["candidates"] = sum(len(items) for items in groups)
+        if "quick" in methods and not duplicate_cancel.is_set():
+            with duplicate_lock:
+                duplicate_state["phase"] = "正在计算分段快速指纹"
+            groups = regroup(groups, lambda item: sample_hash(item, os.path.getsize(item)))
+        if "sha256" in methods and not duplicate_cancel.is_set():
+            with duplicate_lock:
+                duplicate_state["phase"] = "正在计算完整 SHA-256"
+            groups = regroup(groups, full_hash)
+        if "byte" in methods and not duplicate_cancel.is_set():
+            with duplicate_lock:
+                duplicate_state["phase"] = "正在逐字节确认"
+            groups = regroup_by_bytes(groups)
+        if duplicate_cancel.is_set():
+            with duplicate_lock:
+                duplicate_state["cancelled"] = True
+            return
+        results = []
+        reclaimable = 0
+        for items in groups:
+            try:
+                size = os.path.getsize(items[0])
+            except OSError:
+                continue
+            reclaim = size * (len(items) - 1)
+            reclaimable += reclaim
+            results.append({"size": size, "reclaimable": reclaim, "paths": items})
+        results.sort(key=lambda group: group["reclaimable"], reverse=True)
+        with duplicate_lock:
+            duplicate_state.update({
+                "phase": "完成", "groups": len(results), "reclaimable": reclaimable,
+                "result": results[:2000], "truncated": len(results) > 2000,
+            })
+    except Exception as exc:
+        with duplicate_lock:
+            duplicate_state["error"] = str(exc)
+    finally:
+        with duplicate_lock:
+            duplicate_state["running"] = False
 
 
 def fmt_node(path: str, size: int, children=None, kind="folder", ext=""):
@@ -215,6 +367,21 @@ class Handler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(payload)
 
+    def send_gzip_json_file(self, file: Path):
+        size = file.stat().st_size
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Encoding", "gzip")
+        self.send_header("Content-Length", str(size))
+        self.send_header("Cache-Control", "private, max-age=31536000, immutable")
+        self.end_headers()
+        with open(file, "rb") as stream:
+            while True:
+                block = stream.read(1024 * 1024)
+                if not block:
+                    break
+                self.wfile.write(block)
+
     def do_GET(self):
         parsed = urlparse(self.path)
         if parsed.path == "/api/drives":
@@ -232,9 +399,12 @@ class Handler(SimpleHTTPRequestHandler):
         if parsed.path == "/api/snapshot":
             try:
                 snapshot_id = parse_qs(parsed.query).get("id", [""])[0]
-                return self.send_json(load_snapshot(snapshot_id))
-            except (ValueError, OSError, json.JSONDecodeError) as exc:
+                return self.send_gzip_json_file(snapshot_path(snapshot_id))
+            except (ValueError, OSError) as exc:
                 return self.send_json({"error": str(exc)}, 404)
+        if parsed.path == "/api/duplicates/status":
+            with duplicate_lock:
+                return self.send_json(dict(duplicate_state))
         return super().do_GET()
 
     def do_POST(self):
@@ -242,6 +412,27 @@ class Handler(SimpleHTTPRequestHandler):
         if parsed.path == "/api/cancel":
             cancel_event.set()
             return self.send_json({"ok": True})
+        if parsed.path == "/api/duplicates/cancel":
+            duplicate_cancel.set()
+            return self.send_json({"ok": True})
+        if parsed.path == "/api/duplicates/start":
+            length = int(self.headers.get("Content-Length", "0"))
+            data = json.loads(self.rfile.read(length) or b"{}")
+            path = os.path.abspath(data.get("path", ""))
+            methods = [method for method in data.get("methods", []) if method in {"quick", "sha256", "byte"}]
+            min_size = max(1, int(data.get("min_size", 1024 * 1024)))
+            if not os.path.exists(path):
+                return self.send_json({"error": "路径不存在"}, 400)
+            with duplicate_lock:
+                if duplicate_state["running"]:
+                    return self.send_json({"error": "重复文件检测正在运行"}, 409)
+            with lock:
+                if scan_state["running"]:
+                    return self.send_json({"error": "请等待磁盘扫描完成"}, 409)
+            threading.Thread(
+                target=run_duplicate_scan, args=(path, methods, min_size), daemon=True
+            ).start()
+            return self.send_json({"ok": True}, 202)
         if parsed.path == "/api/save":
             length = int(self.headers.get("Content-Length", "0"))
             data = json.loads(self.rfile.read(length) or b"{}")
