@@ -100,12 +100,23 @@ def drives():
     bitmask = ctypes.windll.kernel32.GetLogicalDrives()
     for i in range(26):
         if bitmask & (1 << i):
-            path = f"{chr(65+i)}:\\"
+            letter = f"{chr(65+i)}:"
+            path = f"{letter}\\"
             try:
                 free = ctypes.c_ulonglong(0)
                 total = ctypes.c_ulonglong(0)
                 ctypes.windll.kernel32.GetDiskFreeSpaceExW(path, None, ctypes.pointer(total), ctypes.pointer(free))
-                result.append({"path": path, "total": total.value, "free": free.value, "used": total.value - free.value})
+                remote_buffer = ctypes.create_unicode_buffer(2048)
+                remote_length = ctypes.c_ulong(len(remote_buffer))
+                remote_result = ctypes.windll.mpr.WNetGetConnectionW(
+                    letter, remote_buffer, ctypes.byref(remote_length)
+                )
+                remote = remote_buffer.value if remote_result == 0 else None
+                result.append({
+                    "path": path, "total": total.value, "free": free.value,
+                    "used": total.value - free.value, "remote": remote,
+                    "is_network": bool(remote),
+                })
             except OSError:
                 pass
     return result
