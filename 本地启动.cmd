@@ -1,0 +1,12 @@
+@echo off
+chcp 65001 >nul
+cd /d "%~dp0"
+where python >nul 2>nul
+if errorlevel 1 (
+  echo 未找到 Python。请先安装 Python 3，然后重新双击本文件。
+  pause
+  exit /b 1
+)
+start "" http://127.0.0.1:8765
+python local_server.py
+pause
