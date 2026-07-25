@@ -18,10 +18,12 @@ ROOT = Path(__file__).resolve().parent
 WEB = ROOT / "local"
 scan_state = {"running": False, "files": 0, "folders": 0, "bytes": 0, "path": "", "error": None, "result": None}
 lock = threading.Lock()
+cancel_event = threading.Event()
 
 
-def fmt_node(path: str, size: int, children=None):
-    return {"name": os.path.basename(path.rstrip("\\/")) or path, "path": path, "size": size, "children": children or []}
+def fmt_node(path: str, size: int, children=None, kind="folder", ext=""):
+    return {"name": os.path.basename(path.rstrip("\\/")) or path, "path": path, "size": size,
+            "children": children or [], "kind": kind, "ext": ext}
 
 
 def scan_folder(path: str):
@@ -29,11 +31,16 @@ def scan_folder(path: str):
     largest = []
 
     def walk(current: str):
+        if cancel_event.is_set():
+            return 0, []
         total = 0
         children = []
+        files_here = []
         try:
             with os.scandir(current) as entries:
                 for entry in entries:
+                    if cancel_event.is_set():
+                        break
                     try:
                         if entry.is_symlink():
                             continue
@@ -44,10 +51,10 @@ def scan_folder(path: str):
                                 scan_state["folders"] += 1
                         else:
                             size = entry.stat(follow_symlinks=False).st_size
-                            total += size
                             ext = Path(entry.name).suffix.lower() or "(无扩展名)"
                             type_sizes[ext] += size
                             largest.append((size, entry.name, entry.path, ext))
+                            files_here.append(fmt_node(entry.path, size, kind="file", ext=ext))
                             with lock:
                                 scan_state["files"] += 1
                                 scan_state["bytes"] += size
@@ -55,10 +62,11 @@ def scan_folder(path: str):
                         continue
         except (PermissionError, FileNotFoundError, OSError):
             return 0, []
+        children.extend(files_here)
         children.sort(key=lambda n: n["size"], reverse=True)
         total += sum(n["size"] for n in children)
         # 保留完整大小，但只下发最大的 80 个子目录，防止浏览器内存失控。
-        return total, children[:80]
+        return total, children[:120]
 
     total, children = walk(path)
     largest.sort(reverse=True)
@@ -69,12 +77,16 @@ def scan_folder(path: str):
 
 
 def run_scan(path: str):
+    cancel_event.clear()
     with lock:
-        scan_state.update({"running": True, "files": 0, "folders": 0, "bytes": 0, "path": path, "error": None, "result": None})
+        scan_state.update({"running": True, "cancelled": False, "files": 0, "folders": 0, "bytes": 0, "path": path, "error": None, "result": None})
     try:
         result = scan_folder(path)
         with lock:
-            scan_state["result"] = result
+            if cancel_event.is_set():
+                scan_state["cancelled"] = True
+            else:
+                scan_state["result"] = result
     except Exception as exc:
         with lock:
             scan_state["error"] = str(exc)
@@ -150,6 +162,9 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         parsed = urlparse(self.path)
+        if parsed.path == "/api/cancel":
+            cancel_event.set()
+            return self.send_json({"ok": True})
         if parsed.path != "/api/scan":
             return self.send_json({"error": "Not found"}, 404)
         length = int(self.headers.get("Content-Length", "0"))
