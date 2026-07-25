@@ -4,6 +4,8 @@ import ctypes
 import json
 import mimetypes
 import os
+import subprocess
+import sys
 import threading
 import time
 import webbrowser
@@ -97,6 +99,26 @@ def drives():
     return result
 
 
+def pick_folder():
+    code = (
+        "import tkinter as tk\n"
+        "from tkinter import filedialog\n"
+        "root=tk.Tk(); root.withdraw(); root.attributes('-topmost', True)\n"
+        "path=filedialog.askdirectory(title='选择要扫描的文件夹', mustexist=True)\n"
+        "print(path)\n"
+        "root.destroy()\n"
+    )
+    completed = subprocess.run(
+        [sys.executable, "-c", code],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        timeout=300,
+    )
+    return completed.stdout.strip()
+
+
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(WEB), **kwargs)
@@ -119,6 +141,11 @@ class Handler(SimpleHTTPRequestHandler):
         if parsed.path == "/api/status":
             with lock:
                 return self.send_json(dict(scan_state))
+        if parsed.path == "/api/pick-folder":
+            try:
+                return self.send_json({"path": pick_folder()})
+            except (subprocess.SubprocessError, OSError) as exc:
+                return self.send_json({"error": str(exc)}, 500)
         return super().do_GET()
 
     def do_POST(self):
@@ -140,4 +167,6 @@ class Handler(SimpleHTTPRequestHandler):
 if __name__ == "__main__":
     print("SpaceLens 本地版已启动：http://127.0.0.1:8765")
     print("关闭此窗口即可停止。所有扫描数据仅保留在内存中。")
-    ThreadingHTTPServer(("127.0.0.1", 8765), Handler).serve_forever()
+    server = ThreadingHTTPServer(("127.0.0.1", 8765), Handler)
+    threading.Timer(0.8, lambda: webbrowser.open("http://127.0.0.1:8765")).start()
+    server.serve_forever()
