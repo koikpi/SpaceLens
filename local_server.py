@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ctypes
+import gzip
 import json
 import mimetypes
 import os
@@ -9,6 +10,7 @@ import sys
 import threading
 import time
 import webbrowser
+import uuid
 from collections import defaultdict
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
@@ -16,9 +18,58 @@ from urllib.parse import parse_qs, urlparse
 
 ROOT = Path(__file__).resolve().parent
 WEB = ROOT / "local"
+SAVED = ROOT / "saved_scans"
 scan_state = {"running": False, "files": 0, "folders": 0, "bytes": 0, "path": "", "error": None, "result": None}
 lock = threading.Lock()
 cancel_event = threading.Event()
+
+
+def snapshot_path(snapshot_id: str):
+    if not snapshot_id or any(c not in "0123456789abcdef" for c in snapshot_id):
+        raise ValueError("Invalid snapshot id")
+    return SAVED / f"{snapshot_id}.json.gz"
+
+
+def list_snapshots():
+    SAVED.mkdir(exist_ok=True)
+    items = []
+    for file in SAVED.glob("*.json.gz"):
+        try:
+            with gzip.open(file, "rt", encoding="utf-8") as stream:
+                payload = json.load(stream)
+            meta = payload.get("meta", {})
+            meta["id"] = file.name.removesuffix(".json.gz")
+            items.append(meta)
+        except (OSError, json.JSONDecodeError):
+            continue
+    return sorted(items, key=lambda item: item.get("created", 0), reverse=True)
+
+
+def save_snapshot(name: str, automatic=False):
+    with lock:
+        result = scan_state.get("result")
+        meta = {
+            "name": (name or "").strip()[:80] or scan_state.get("path") or "未命名扫描",
+            "path": scan_state.get("path", ""),
+            "created": int(time.time()),
+            "files": scan_state.get("files", 0),
+            "folders": scan_state.get("folders", 0),
+            "bytes": result["root"]["size"] if result else 0,
+            "automatic": automatic,
+        }
+    if not result:
+        raise ValueError("没有可保存的扫描结果")
+    SAVED.mkdir(exist_ok=True)
+    snapshot_id = uuid.uuid4().hex
+    with gzip.open(snapshot_path(snapshot_id), "wt", encoding="utf-8", compresslevel=6) as stream:
+        json.dump({"meta": meta, "result": result}, stream, ensure_ascii=False, separators=(",", ":"))
+    meta["id"] = snapshot_id
+    return meta
+
+
+def load_snapshot(snapshot_id: str):
+    with gzip.open(snapshot_path(snapshot_id), "rt", encoding="utf-8") as stream:
+        return json.load(stream)
 
 
 def fmt_node(path: str, size: int, children=None, kind="folder", ext=""):
@@ -78,6 +129,7 @@ def scan_folder(path: str):
 
 def run_scan(path: str):
     cancel_event.clear()
+    completed = False
     with lock:
         scan_state.update({"running": True, "cancelled": False, "files": 0, "folders": 0, "bytes": 0, "path": path, "error": None, "result": None})
     try:
@@ -87,6 +139,12 @@ def run_scan(path: str):
                 scan_state["cancelled"] = True
             else:
                 scan_state["result"] = result
+                completed = True
+        if completed:
+            try:
+                save_snapshot(f"自动快照 · {path}", automatic=True)
+            except OSError:
+                pass
     except Exception as exc:
         with lock:
             scan_state["error"] = str(exc)
@@ -169,6 +227,14 @@ class Handler(SimpleHTTPRequestHandler):
                 return self.send_json({"path": pick_folder()})
             except (subprocess.SubprocessError, OSError) as exc:
                 return self.send_json({"error": str(exc)}, 500)
+        if parsed.path == "/api/snapshots":
+            return self.send_json(list_snapshots())
+        if parsed.path == "/api/snapshot":
+            try:
+                snapshot_id = parse_qs(parsed.query).get("id", [""])[0]
+                return self.send_json(load_snapshot(snapshot_id))
+            except (ValueError, OSError, json.JSONDecodeError) as exc:
+                return self.send_json({"error": str(exc)}, 404)
         return super().do_GET()
 
     def do_POST(self):
@@ -176,6 +242,22 @@ class Handler(SimpleHTTPRequestHandler):
         if parsed.path == "/api/cancel":
             cancel_event.set()
             return self.send_json({"ok": True})
+        if parsed.path == "/api/save":
+            length = int(self.headers.get("Content-Length", "0"))
+            data = json.loads(self.rfile.read(length) or b"{}")
+            try:
+                return self.send_json(save_snapshot(data.get("name", "")), 201)
+            except ValueError as exc:
+                return self.send_json({"error": str(exc)}, 400)
+        if parsed.path == "/api/delete-snapshot":
+            length = int(self.headers.get("Content-Length", "0"))
+            data = json.loads(self.rfile.read(length) or b"{}")
+            try:
+                file = snapshot_path(data.get("id", ""))
+                file.unlink()
+                return self.send_json({"ok": True})
+            except (ValueError, OSError) as exc:
+                return self.send_json({"error": str(exc)}, 400)
         if parsed.path != "/api/scan":
             return self.send_json({"error": "Not found"}, 404)
         length = int(self.headers.get("Content-Length", "0"))
