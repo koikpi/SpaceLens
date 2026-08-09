@@ -841,6 +841,11 @@ class Handler(SimpleHTTPRequestHandler):
 
 
 if __name__ == "__main__":
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, OSError):
+            pass
     port = int(os.environ.get("SPACELENS_PORT", "8765"))
     address = f"http://127.0.0.1:{port}"
     system_name = "macOS" if sys.platform == "darwin" else "Windows" if sys.platform == "win32" else sys.platform
