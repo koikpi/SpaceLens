@@ -36,10 +36,18 @@ yarn-error.log*
 
 # typescript
 next-env.d.ts
+*.tsbuildinfo
 /dist/
+/dist-native/
 /.wrangler/
 /outputs/
 /work/
 __pycache__/
 *.pyc
 /saved_scans/
+/release/
+/build-pyinstaller/
+*.spec.bak
+
+# local release archives
+/SpaceLens-*.zip

@@ -1,98 +1,111 @@
-# vinext-starter
+# SpaceLens
 
-A clean full-stack starter running on
-[vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and
-Drizzle support.
+SpaceLens 是一款完全在本机运行的磁盘空间分析器，使用交互式矩形树图、列表和容量条展示目录占用，帮助定位大文件、重复文件和可清理空间。
 
-## Prerequisites
+## 特性
 
-- Node.js `>=22.13.0`
+- 扫描本地磁盘、文件夹、外置磁盘和已挂载的网络共享
+- 矩形树图、层级列表、容量条等多种视图
+- 搜索文件并查看最大的文件
+- 支持快速比较、SHA-256 和逐字节重复文件检测
+- 保存和重新打开本地扫描快照
+- 在 Windows 资源管理器或 macOS Finder 中定位文件
+- 只使用 Python 标准库，无需安装第三方 Python 依赖
+- 提供 Windows x64、Windows ARM64 和 macOS ARM64 独立发行包
 
-## Quick Start
+## 隐私与安全
+
+SpaceLens 的本地服务只监听 `127.0.0.1`，不会对局域网或互联网开放。扫描得到的文件名、路径、大小、索引和历史快照只保存在本机的 `saved_scans/` 目录中。
+
+独立发行版的数据保存位置为：
+
+- Windows：`%LOCALAPPDATA%\SpaceLens\saved_scans`
+- macOS：`~/Library/Application Support/SpaceLens/saved_scans`
+
+`saved_scans/`、环境变量文件、构建缓存和发布压缩包均已加入 `.gitignore`，不会被提交到 Git 仓库。SpaceLens 不会主动上传扫描结果或硬盘信息。
+
+> 提醒：扫描快照可能包含真实文件名和完整路径。分享日志、截图或程序目录前，请先检查并移除 `saved_scans/`。
+
+## Windows 使用方法
+
+要求：Windows 10/11、Python 3.10 或更高版本。
+
+1. 下载源码并解压。
+2. 双击 `本地启动.cmd`。
+3. 浏览器会自动打开 <http://127.0.0.1:8765>。
+4. 关闭启动窗口即可停止 SpaceLens。
+
+也可以在 PowerShell 中运行：
+
+```powershell
+python local_server.py
+```
+
+从 GitHub Actions 下载的独立版无需安装 Python，解压后双击 `启动 SpaceLens.cmd`。请根据设备选择 `Windows-x64` 或 `Windows-ARM64`。
+
+## macOS 使用方法
+
+要求：macOS 12 或更高版本、Python 3.10 或更高版本。
+
+首次使用时，在终端中进入项目目录并运行：
+
+```bash
+chmod +x "启动 SpaceLens.command"
+./启动\ SpaceLens.command
+```
+
+更详细的说明见 [MACOS.md](MACOS.md)。
+
+从 GitHub Actions 下载的 `macOS-ARM64` 独立版无需安装 Python，适用于 Apple Silicon Mac。
+
+## 免费跨平台测试与打包
+
+仓库包含 `.github/workflows/build-cross-platform.yml`，只能在 GitHub Actions 页面手动触发，不会在每次提交时消耗额度。一次运行会：
+
+1. 在 Windows x64、Windows ARM64 和 macOS ARM64 上运行同一组测试。
+2. 使用 PyInstaller 在目标系统上原生打包。
+3. 启动打包后的程序并请求本地 HTTP 服务。
+4. 上传三个可下载的 ZIP 产物。
+
+详细操作见 [CROSS_PLATFORM_TESTING.md](CROSS_PLATFORM_TESTING.md)。
+
+## 从源码启动
+
+```bash
+git clone https://github.com/你的用户名/SpaceLens.git
+cd SpaceLens
+python local_server.py
+```
+
+本地服务启动后会自动打开默认浏览器。程序默认使用端口 `8765`。
+
+## Web 界面开发
+
+仓库也包含 SpaceLens 的 React/Web 界面。开发环境要求 Node.js 22.13 或更高版本：
 
 ```bash
 npm install
 npm run dev
-npm run build
 ```
 
-This starter does not use `wrangler.jsonc`.
+构建和测试：
 
-## Included Shape
-
-- edit site code under `app/`
-- `.openai/hosting.json` declares optional Sites D1 and R2 bindings
-- `vite.config.ts` simulates declared bindings for local development
-- `db/schema.ts` starts intentionally empty
-- `examples/d1/` contains an optional D1 example surface
-- `drizzle.config.ts` supports local migration generation when needed
-
-## Workspace Auth Headers
-
-OpenAI workspace sites can read the current user's email from
-`oai-authenticated-user-email`.
-
-SIWC-authenticated workspace sites may also receive
-`oai-authenticated-user-full-name` when the user's SIWC profile has a non-empty
-`name` claim. The full-name value is percent-encoded UTF-8 and is accompanied by
-`oai-authenticated-user-full-name-encoding: percent-encoded-utf-8`.
-
-Treat the full name as optional and fall back to email when it is absent:
-
-```tsx
-import { headers } from "next/headers";
-
-export default async function Home() {
-  const requestHeaders = await headers();
-  const email = requestHeaders.get("oai-authenticated-user-email");
-  const encodedFullName = requestHeaders.get("oai-authenticated-user-full-name");
-  const fullName =
-    encodedFullName &&
-    requestHeaders.get("oai-authenticated-user-full-name-encoding") ===
-      "percent-encoded-utf-8"
-      ? decodeURIComponent(encodedFullName)
-      : null;
-
-  const displayName = fullName ?? email;
-  // ...
-}
+```bash
+npm run lint
+npm test
 ```
 
-## Optional Dispatch-Owned ChatGPT Sign-In
+## 项目结构
 
-Import the ready-to-use helpers from `app/chatgpt-auth.ts` when the site needs
-optional or required ChatGPT sign-in:
+- `local_server.py`：跨平台本地扫描服务
+- `local/index.html`：本地版浏览器界面
+- `app/`：React/Web 界面
+- `tests/`：Web 界面与本地服务测试
+- `SpaceLens.spec`：跨平台 PyInstaller 打包配置
+- `.github/workflows/build-cross-platform.yml`：手动跨平台 CI
+- `本地启动.cmd`：Windows 启动脚本
+- `启动 SpaceLens.command`：macOS 启动脚本
 
-- Use `getChatGPTUser()` for optional signed-in UI.
-- Use `requireChatGPTUser(returnTo)` for server-rendered pages that should send
-  anonymous visitors through Sign in with ChatGPT.
-- Use `chatGPTSignInPath(returnTo)` and `chatGPTSignOutPath(returnTo)` for
-  browser links or actions.
-- Pass a same-origin relative `returnTo` path for the destination after sign-in
-  or sign-out. The helper validates and safely encodes it.
-- Mark protected pages with `export const dynamic = "force-dynamic"` because
-  they depend on per-request identity headers.
+## 开源许可
 
-Dispatch owns `/signin-with-chatgpt`, `/signout-with-chatgpt`, `/callback`, the
-OAuth cookies, and identity header injection. Do not implement app routes for
-those reserved paths. Routes that do not import and call the helper remain
-anonymous-compatible.
-
-SIWC establishes identity only; it does not prove workspace membership. Use the
-Sites hosting platform's access policy controls for workspace-wide restrictions,
-or enforce explicit server-side membership or allowlist checks.
-
-Use SIWC for account pages, user-specific dashboards, saved records, and write
-actions tied to the current ChatGPT user. Leave public content anonymous.
-
-## Useful Commands
-
-- `npm run dev`: start local development
-- `npm run build`: verify the vinext build output
-- `npm test`: build the starter and verify its rendered loading skeleton
-- `npm run db:generate`: generate Drizzle migrations after schema changes
-
-## Learn More
-
-- [vinext Documentation](https://github.com/cloudflare/vinext)
-- [Drizzle D1 Guide](https://orm.drizzle.team/docs/get-started/d1-new)
+本项目采用 [MIT License](LICENSE)。
