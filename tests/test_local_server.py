@@ -19,13 +19,13 @@ class ScannerTests(unittest.TestCase):
             local_server.scan_state.update({"files": 0, "folders": 0, "bytes": 0})
 
     def test_scan_builds_tree_and_search_index(self):
-        with tempfile.TemporaryDirectory() as temporary:
+        with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() as index_temporary:
             root = Path(temporary)
             data = root / "中文 目录"
             data.mkdir()
             (root / "small.txt").write_bytes(b"abc")
             (data / "video.mov").write_bytes(b"x" * 2048)
-            saved = root / "indexes"
+            saved = Path(index_temporary) / "indexes"
 
             with patch.object(local_server, "SAVED", saved):
                 result, index_path = local_server.scan_folder(str(root))
