@@ -2,6 +2,11 @@ name: Build cross-platform releases
 
 on:
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: GitHub Release tag
+        required: true
+        default: v0.1.0
 
 permissions:
   contents: read
@@ -110,18 +115,72 @@ jobs:
           python -m PyInstaller --clean --noconfirm --workpath build-pyinstaller SpaceLens.spec
           file dist/SpaceLens | tee /tmp/spacelens-file.txt
           grep -q "arm64" /tmp/spacelens-file.txt
-          mkdir -p release/SpaceLens-macOS-ARM64
-          cp dist/SpaceLens release/SpaceLens-macOS-ARM64/
-          cp "packaging/macos/启动 SpaceLens.command" release/SpaceLens-macOS-ARM64/
-          cp README.md MACOS.md LICENSE release/SpaceLens-macOS-ARM64/
-          chmod +x release/SpaceLens-macOS-ARM64/SpaceLens "release/SpaceLens-macOS-ARM64/启动 SpaceLens.command"
+          app="release/SpaceLens.app"
+          mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
+          cp dist/SpaceLens "$app/Contents/MacOS/SpaceLens"
+          cp packaging/macos/Info.plist "$app/Contents/Info.plist"
+          cp README.md MACOS.md LICENSE "$app/Contents/Resources/"
+          chmod +x "$app/Contents/MacOS/SpaceLens"
+          codesign --force --deep --sign - "$app"
+          codesign --verify --deep --strict --verbose=2 "$app"
       - name: Smoke-test packaged program
         shell: bash
         run: |
-          python tests/smoke_packaged.py release/SpaceLens-macOS-ARM64/SpaceLens
-          ditto -c -k --keepParent release/SpaceLens-macOS-ARM64 release/SpaceLens-macOS-ARM64.zip
+          executable="release/SpaceLens.app/Contents/MacOS/SpaceLens"
+          file "$executable" | tee /tmp/spacelens-app-file.txt
+          grep -q "arm64" /tmp/spacelens-app-file.txt
+          python tests/smoke_packaged.py "$executable"
+      - name: Create and verify DMG
+        shell: bash
+        run: |
+          mkdir -p release/dmg-root
+          ditto release/SpaceLens.app release/dmg-root/SpaceLens.app
+          ln -s /Applications release/dmg-root/Applications
+          hdiutil create \
+            -volname "SpaceLens" \
+            -srcfolder release/dmg-root \
+            -ov \
+            -format UDZO \
+            release/SpaceLens-macOS-ARM64.dmg
+          mkdir -p /tmp/spacelens-dmg
+          hdiutil attach -nobrowse -readonly \
+            -mountpoint /tmp/spacelens-dmg \
+            release/SpaceLens-macOS-ARM64.dmg
+          test -x /tmp/spacelens-dmg/SpaceLens.app/Contents/MacOS/SpaceLens
+          test -L /tmp/spacelens-dmg/Applications
+          file /tmp/spacelens-dmg/SpaceLens.app/Contents/MacOS/SpaceLens | grep -q "arm64"
+          hdiutil detach /tmp/spacelens-dmg
       - uses: actions/upload-artifact@v4
         with:
           name: SpaceLens-macOS-ARM64
-          path: release/SpaceLens-macOS-ARM64.zip
+          path: release/SpaceLens-macOS-ARM64.dmg
           if-no-files-found: error
+
+  publish-release:
+    name: Publish direct downloads
+    runs-on: ubuntu-latest
+    needs: [windows-x64, windows-arm64, macos-arm64]
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: SpaceLens-*
+          path: release-assets
+          merge-multiple: true
+      - name: Publish GitHub Release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        shell: bash
+        run: |
+          ls -lh release-assets
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" release-assets/* --clobber
+          else
+            gh release create "$RELEASE_TAG" release-assets/* \
+              --target "$GITHUB_SHA" \
+              --title "SpaceLens ${RELEASE_TAG}" \
+              --notes "Windows x64、Windows ARM64 与 macOS Apple Silicon 安装包。macOS 用户请直接下载 DMG。"
+          fi

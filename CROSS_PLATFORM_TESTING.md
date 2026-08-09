@@ -15,7 +15,10 @@
 3. 打开仓库的 **Actions** 页面。
 4. 选择 **Build cross-platform releases**。
 5. 点击 **Run workflow**。
-6. 三个任务全部变绿后，在运行详情页面的 **Artifacts** 下载三个发行包。
+6. 三个平台和发布任务全部变绿后，打开仓库的 **Releases** 页面。
+7. Windows 用户直接下载对应架构的 ZIP；Apple Silicon Mac 用户直接下载 `SpaceLens-macOS-ARM64.dmg`。
+
+Actions 详情页的 Artifacts 会由 GitHub 统一套一层 ZIP，适合保存构建记录；面向普通用户分发时使用 Releases 页面，DMG 可以直接下载。
 
 GitHub Free 私有仓库使用标准运行器时会先消耗每月包含的 Actions 额度。为防止产生费用，可以不添加付款方式，或在 Billing 中把 Actions 预算设为 0 并启用超额停止。
 

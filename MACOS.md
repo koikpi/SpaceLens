@@ -2,7 +2,17 @@
 
 SpaceLens 是完全在本机运行的磁盘空间分析器。扫描结果、文件索引和历史快照均保存在当前程序目录下的 `saved_scans` 文件夹中，不会上传。
 
-## 系统要求
+## DMG 安装版（推荐）
+
+Apple Silicon Mac 用户从 GitHub Releases 下载 `SpaceLens-macOS-ARM64.dmg`：
+
+1. 双击打开 DMG。
+2. 把 `SpaceLens.app` 拖到“Applications/应用程序”。
+3. 在“应用程序”中双击 SpaceLens。
+
+DMG 安装版不需要安装 Python。当前免费构建采用临时签名，没有经过 Apple 公证；首次启动如果被系统拦截，请按住 Control 点击 SpaceLens，选择“打开”，再确认一次。正式消除该提示需要 Apple Developer ID 签名和公证。
+
+## 源码版系统要求
 
 - macOS 12 Monterey 或更高版本
 - Python 3.10 或更高版本
@@ -10,7 +20,7 @@ SpaceLens 是完全在本机运行的磁盘空间分析器。扫描结果、文�
 
 程序只使用 Python 标准库，不需要安装第三方依赖。
 
-## 首次启动
+## 源码版首次启动
 
 1. 下载并解压整个 `SpaceLens` 项目文件夹，不要只复制启动脚本。
 2. 打开“终端”，输入 `chmod +x `（末尾保留一个空格）。

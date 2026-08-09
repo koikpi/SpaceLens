@@ -45,7 +45,9 @@ python local_server.py
 
 ## macOS 使用方法
 
-要求：macOS 12 或更高版本、Python 3.10 或更高版本。
+Apple Silicon Mac 推荐从 GitHub Releases 直接下载 `SpaceLens-macOS-ARM64.dmg`。双击 DMG，将 `SpaceLens.app` 拖入“应用程序”后即可运行；DMG 安装版不需要安装 Python。
+
+源码版要求 macOS 12 或更高版本、Python 3.10 或更高版本。
 
 首次使用时，在终端中进入项目目录并运行：
 
@@ -56,7 +58,7 @@ chmod +x "启动 SpaceLens.command"
 
 更详细的说明见 [MACOS.md](MACOS.md)。
 
-从 GitHub Actions 下载的 `macOS-ARM64` 独立版无需安装 Python，适用于 Apple Silicon Mac。
+当前免费构建采用临时签名，没有经过 Apple 公证。首次启动若被 macOS 拦截，请按住 Control 点击 SpaceLens，选择“打开”。详细说明见 [MACOS.md](MACOS.md)。
 
 ## 免费跨平台测试与打包
 
@@ -65,7 +67,7 @@ chmod +x "启动 SpaceLens.command"
 1. 在 Windows x64、Windows ARM64 和 macOS ARM64 上运行同一组测试。
 2. 使用 PyInstaller 在目标系统上原生打包。
 3. 启动打包后的程序并请求本地 HTTP 服务。
-4. 上传三个可下载的 ZIP 产物。
+4. 构建 Windows ZIP 和 macOS DMG，并发布到 GitHub Releases 提供直接下载。
 
 详细操作见 [CROSS_PLATFORM_TESTING.md](CROSS_PLATFORM_TESTING.md)。
 
