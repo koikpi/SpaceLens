@@ -2,6 +2,17 @@
 
 SpaceLens 是一款完全在本机运行的磁盘空间分析器，使用交互式矩形树图、列表和容量条展示目录占用，帮助定位大文件、重复文件和可清理空间。
 
+## 立即下载（Windows）
+
+大多数 Windows 10/11 电脑请选择：
+
+- **[下载 SpaceLens Windows x64](https://github.com/koikpi/SpaceLens/releases/download/v0.1.0/SpaceLens-Windows-x64.zip)** — 适用于 Intel 或 AMD 处理器
+- [下载 SpaceLens Windows ARM64](https://github.com/koikpi/SpaceLens/releases/download/v0.1.0/SpaceLens-Windows-ARM64.zip) — 仅适用于 Snapdragon 等 ARM Windows 设备
+
+下载后解压整个 ZIP，双击 `启动 SpaceLens.cmd`。独立版不需要安装 Python。
+
+如果不确定电脑架构，优先下载 Windows x64。也可以前往 [Releases 页面](https://github.com/koikpi/SpaceLens/releases/latest) 查看所有版本和文件校验值。
+
 ## 特性
 
 - 扫描本地磁盘、文件夹、外置磁盘和已挂载的网络共享
@@ -28,6 +39,17 @@ SpaceLens 的本地服务只监听 `127.0.0.1`，不会对局域网或互联网�
 
 ## Windows 使用方法
 
+### 独立版（推荐）
+
+1. 从上面的链接下载与你设备架构对应的 ZIP。
+2. 解压整个 ZIP，不要直接在压缩包内运行程序。
+3. 双击 `启动 SpaceLens.cmd`。
+4. 浏览器会自动打开 <http://127.0.0.1:8765>；关闭程序窗口即可停止 SpaceLens。
+
+独立版支持 Windows 10/11，不需要安装 Python。Windows 第一次运行未知发布者的程序时可能显示 SmartScreen 提示；请确认文件来自本仓库的 Releases 页面后再运行。
+
+### 源码版
+
 要求：Windows 10/11、Python 3.10 或更高版本。
 
 1. 下载源码并解压。
@@ -40,8 +62,6 @@ SpaceLens 的本地服务只监听 `127.0.0.1`，不会对局域网或互联网�
 ```powershell
 python local_server.py
 ```
-
-从 GitHub Actions 下载的独立版无需安装 Python，解压后双击 `启动 SpaceLens.cmd`。请根据设备选择 `Windows-x64` 或 `Windows-ARM64`。
 
 ## macOS 使用方法
 
@@ -74,7 +94,7 @@ chmod +x "启动 SpaceLens.command"
 ## 从源码启动
 
 ```bash
-git clone https://github.com/你的用户名/SpaceLens.git
+git clone https://github.com/koikpi/SpaceLens.git
 cd SpaceLens
 python local_server.py
 ```

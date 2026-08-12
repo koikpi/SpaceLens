@@ -10,17 +10,16 @@
 
 ## 第一次使用
 
-1. 在 GitHub 新建一个私有仓库。
-2. 将本项目推送到仓库。
-3. 打开仓库的 **Actions** 页面。
-4. 选择 **Build cross-platform releases**。
-5. 点击 **Run workflow**。
-6. 三个平台和发布任务全部变绿后，打开仓库的 **Releases** 页面。
-7. Windows 用户直接下载对应架构的 ZIP；Apple Silicon Mac 用户直接下载 `SpaceLens-macOS-ARM64.dmg`。
+1. Fork 本仓库，或将项目推送到你有管理权限的 GitHub 仓库。
+2. 打开该仓库的 **Actions** 页面并启用 Actions（如果尚未启用）。
+3. 选择 **Build cross-platform releases**。
+4. 点击 **Run workflow**，填写一个尚未使用的版本标签。
+5. 三个平台和发布任务全部变绿后，打开仓库的 **Releases** 页面。
+6. Windows 用户直接下载对应架构的 ZIP；Apple Silicon Mac 用户直接下载 `SpaceLens-macOS-ARM64.dmg`。
 
 Actions 详情页的 Artifacts 会由 GitHub 统一套一层 ZIP，适合保存构建记录；面向普通用户分发时使用 Releases 页面，DMG 可以直接下载。
 
-GitHub Free 私有仓库使用标准运行器时会先消耗每月包含的 Actions 额度。为防止产生费用，可以不添加付款方式，或在 Billing 中把 Actions 预算设为 0 并启用超额停止。
+GitHub Actions 的免费额度和计费规则会随仓库可见性与账户方案变化。触发构建前请在 GitHub Billing 中检查当前额度；如不希望产生额外费用，可把 Actions 预算设为 0 并启用超额停止。
 
 ## 自动验证内容
 
