@@ -1,97 +1,44 @@
 # SpaceLens
 
-SpaceLens 是一款完全在本机运行的磁盘空间分析器，使用交互式矩形树图、列表和容量条展示目录占用，帮助定位大文件、重复文件和可清理空间。
+<p align="center">
+  <img src="packaging/icons/SpaceLens.png" width="160" alt="SpaceLens icon">
+</p>
 
-## 立即下载（Windows）
+**中文** | [English](#english)
 
-大多数 Windows 10/11 电脑请选择：
+SpaceLens 是一款完全在本机运行的磁盘空间分析器。它通过矩形树图、目录列表和容量条帮助你发现大文件、重复文件和可清理空间。
 
-- **[下载 SpaceLens Windows x64](https://github.com/koikpi/SpaceLens/releases/download/v0.1.0/SpaceLens-Windows-x64.zip)** — 适用于 Intel 或 AMD 处理器
-- [下载 SpaceLens Windows ARM64](https://github.com/koikpi/SpaceLens/releases/download/v0.1.0/SpaceLens-Windows-ARM64.zip) — 仅适用于 Snapdragon 等 ARM Windows 设备
+## 下载
 
-下载后解压整个 ZIP，双击 `启动 SpaceLens.cmd`。独立版不需要安装 Python。
+- [Windows x64](https://github.com/koikpi/SpaceLens/releases/latest/download/SpaceLens-Windows-x64.zip) — 适用于大多数 Intel/AMD Windows 10/11 电脑
+- [Windows ARM64](https://github.com/koikpi/SpaceLens/releases/latest/download/SpaceLens-Windows-ARM64.zip) — 适用于 Snapdragon 等 ARM Windows 设备
+- [macOS ARM64](https://github.com/koikpi/SpaceLens/releases/latest/download/SpaceLens-macOS-ARM64.dmg) — 适用于 Apple Silicon Mac
 
-如果不确定电脑架构，优先下载 Windows x64。也可以前往 [Releases 页面](https://github.com/koikpi/SpaceLens/releases/latest) 查看所有版本和文件校验值。
+Windows 用户请解压整个 ZIP 后双击 `启动 SpaceLens.cmd`。macOS 用户请打开 DMG，并将 `SpaceLens.app` 拖入“应用程序”。独立版本均不需要安装 Python。
 
-## 特性
+## 功能
 
 - 扫描本地磁盘、文件夹、外置磁盘和已挂载的网络共享
-- 矩形树图、层级列表、容量条等多种视图
-- 搜索文件并查看最大的文件
-- 支持快速比较、SHA-256 和逐字节重复文件检测
-- 保存和重新打开本地扫描快照
+- 矩形树图、层级列表、容量条和大文件搜索
+- 快速比较、SHA-256 和逐字节重复文件检测
+- 保存并重新打开本地扫描快照
 - 在 Windows 资源管理器或 macOS Finder 中定位文件
-- 只使用 Python 标准库，无需安装第三方 Python 依赖
-- 提供 Windows x64、Windows ARM64 和 macOS ARM64 独立发行包
+- 提供 Windows x64、Windows ARM64 和 macOS ARM64 独立安装包
 
 ## 隐私与安全
 
-SpaceLens 的本地服务只监听 `127.0.0.1`，不会对局域网或互联网开放。扫描得到的文件名、路径、大小、索引和历史快照只保存在本机的 `saved_scans/` 目录中。
+SpaceLens 的本地服务只监听 `127.0.0.1`，不会向局域网或互联网开放。SpaceLens 不会主动上传扫描结果或硬盘信息，包括文件名和路径。
 
-独立发行版的数据保存位置为：
+扫描数据只保存在本机：
 
 - Windows：`%LOCALAPPDATA%\SpaceLens\saved_scans`
 - macOS：`~/Library/Application Support/SpaceLens/saved_scans`
 
-`saved_scans/`、环境变量文件、构建缓存和发布压缩包均已加入 `.gitignore`，不会被提交到 Git 仓库。SpaceLens 不会主动上传扫描结果或硬盘信息。
+`saved_scans/`、环境变量文件、构建缓存和发布压缩包均被 Git 忽略。分享日志、截图或程序数据目录前，仍请先检查其中是否含有真实文件名或完整路径。
 
-> 提醒：扫描快照可能包含真实文件名和完整路径。分享日志、截图或程序目录前，请先检查并移除 `saved_scans/`。
+## 从源码运行
 
-## Windows 使用方法
-
-### 独立版（推荐）
-
-1. 从上面的链接下载与你设备架构对应的 ZIP。
-2. 解压整个 ZIP，不要直接在压缩包内运行程序。
-3. 双击 `启动 SpaceLens.cmd`。
-4. 浏览器会自动打开 <http://127.0.0.1:8765>；关闭程序窗口即可停止 SpaceLens。
-
-独立版支持 Windows 10/11，不需要安装 Python。Windows 第一次运行未知发布者的程序时可能显示 SmartScreen 提示；请确认文件来自本仓库的 Releases 页面后再运行。
-
-### 源码版
-
-要求：Windows 10/11、Python 3.10 或更高版本。
-
-1. 下载源码并解压。
-2. 双击 `本地启动.cmd`。
-3. 浏览器会自动打开 <http://127.0.0.1:8765>。
-4. 关闭启动窗口即可停止 SpaceLens。
-
-也可以在 PowerShell 中运行：
-
-```powershell
-python local_server.py
-```
-
-## macOS 使用方法
-
-Apple Silicon Mac 推荐从 GitHub Releases 直接下载 `SpaceLens-macOS-ARM64.dmg`。双击 DMG，将 `SpaceLens.app` 拖入“应用程序”后即可运行；DMG 安装版不需要安装 Python。
-
-源码版要求 macOS 12 或更高版本、Python 3.10 或更高版本。
-
-首次使用时，在终端中进入项目目录并运行：
-
-```bash
-chmod +x "启动 SpaceLens.command"
-./启动\ SpaceLens.command
-```
-
-更详细的说明见 [MACOS.md](MACOS.md)。
-
-当前免费构建采用临时签名，没有经过 Apple 公证。首次启动若被 macOS 拦截，请按住 Control 点击 SpaceLens，选择“打开”。详细说明见 [MACOS.md](MACOS.md)。
-
-## 免费跨平台测试与打包
-
-仓库包含 `.github/workflows/build-cross-platform.yml`，只能在 GitHub Actions 页面手动触发，不会在每次提交时消耗额度。一次运行会：
-
-1. 在 Windows x64、Windows ARM64 和 macOS ARM64 上运行同一组测试。
-2. 使用 PyInstaller 在目标系统上原生打包。
-3. 启动打包后的程序并请求本地 HTTP 服务。
-4. 构建 Windows ZIP 和 macOS DMG，并发布到 GitHub Releases 提供直接下载。
-
-详细操作见 [CROSS_PLATFORM_TESTING.md](CROSS_PLATFORM_TESTING.md)。
-
-## 从源码启动
+需要 Python 3.10 或更高版本：
 
 ```bash
 git clone https://github.com/koikpi/SpaceLens.git
@@ -99,35 +46,80 @@ cd SpaceLens
 python local_server.py
 ```
 
-本地服务启动后会自动打开默认浏览器。程序默认使用端口 `8765`。
+服务会在 <http://127.0.0.1:8765> 启动并打开默认浏览器。macOS 的首次运行与系统安全提示说明见 [MACOS.md](MACOS.md)，跨平台构建说明见 [CROSS_PLATFORM_TESTING.md](CROSS_PLATFORM_TESTING.md)。
 
 ## Web 界面开发
 
-仓库也包含 SpaceLens 的 React/Web 界面。开发环境要求 Node.js 22.13 或更高版本：
+需要 Node.js 22.13 或更高版本：
 
 ```bash
 npm install
 npm run dev
-```
-
-构建和测试：
-
-```bash
 npm run lint
 npm test
 ```
 
-## 项目结构
+## 许可证
 
-- `local_server.py`：跨平台本地扫描服务
-- `local/index.html`：本地版浏览器界面
-- `app/`：React/Web 界面
-- `tests/`：Web 界面与本地服务测试
-- `SpaceLens.spec`：跨平台 PyInstaller 打包配置
-- `.github/workflows/build-cross-platform.yml`：手动跨平台 CI
-- `本地启动.cmd`：Windows 启动脚本
-- `启动 SpaceLens.command`：macOS 启动脚本
+[MIT License](LICENSE)
 
-## 开源许可
+---
 
-本项目采用 [MIT License](LICENSE)。
+## English
+
+SpaceLens is a privacy-focused disk space analyzer that runs entirely on your computer. Its interactive treemap, directory list, and capacity bars help you find large files, duplicates, and reclaimable space.
+
+## Downloads
+
+- [Windows x64](https://github.com/koikpi/SpaceLens/releases/latest/download/SpaceLens-Windows-x64.zip) — most Intel/AMD Windows 10/11 PCs
+- [Windows ARM64](https://github.com/koikpi/SpaceLens/releases/latest/download/SpaceLens-Windows-ARM64.zip) — ARM Windows devices such as Snapdragon PCs
+- [macOS ARM64](https://github.com/koikpi/SpaceLens/releases/latest/download/SpaceLens-macOS-ARM64.dmg) — Apple Silicon Macs
+
+On Windows, extract the entire ZIP and double-click `启动 SpaceLens.cmd`. On macOS, open the DMG and drag `SpaceLens.app` into Applications. Neither standalone build requires Python.
+
+## Features
+
+- Scan local disks, folders, external drives, and mounted network shares
+- Explore usage with a treemap, hierarchy list, capacity bars, and large-file search
+- Detect duplicate files using quick comparison, SHA-256, or byte-by-byte checks
+- Save and reopen scan snapshots locally
+- Reveal files in Windows Explorer or macOS Finder
+- Native packages for Windows x64, Windows ARM64, and macOS ARM64
+
+## Privacy and security
+
+SpaceLens binds its local service to `127.0.0.1` only. It does not expose the service to your LAN or the internet, and it does not upload scan results, file names, paths, or disk information.
+
+Scan data stays on your device:
+
+- Windows: `%LOCALAPPDATA%\SpaceLens\saved_scans`
+- macOS: `~/Library/Application Support/SpaceLens/saved_scans`
+
+Scan snapshots, environment files, build caches, and release archives are excluded from Git. Before sharing logs, screenshots, or application data, check them for real file names and full local paths.
+
+## Run from source
+
+Python 3.10 or newer is required:
+
+```bash
+git clone https://github.com/koikpi/SpaceLens.git
+cd SpaceLens
+python local_server.py
+```
+
+The service starts at <http://127.0.0.1:8765> and opens your default browser. See [MACOS.md](MACOS.md) for first-launch security guidance and [CROSS_PLATFORM_TESTING.md](CROSS_PLATFORM_TESTING.md) for cross-platform packaging details.
+
+## Web UI development
+
+Node.js 22.13 or newer is required:
+
+```bash
+npm install
+npm run dev
+npm run lint
+npm test
+```
+
+## License
+
+[MIT License](LICENSE)

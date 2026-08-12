@@ -1,5 +1,9 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import sys
+
+icon_file = "packaging/icons/SpaceLens.ico" if sys.platform == "win32" else "packaging/icons/SpaceLens.png"
+
 a = Analysis(
     ["local_server.py"],
     pathex=[],
@@ -28,4 +32,5 @@ exe = EXE(
     upx=False,
     console=True,
     disable_windowed_traceback=False,
+    icon=icon_file,
 )

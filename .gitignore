@@ -47,6 +47,8 @@ __pycache__/
 /saved_scans/
 /release/
 /build-pyinstaller/
+/.privacy-check-dmg/
+/packaging/icons/*-source-chroma.png
 *.spec.bak
 
 # local release archives
