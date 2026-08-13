@@ -49,6 +49,8 @@ __pycache__/
 /docs/screenshots/*-raw.png
 /release/
 /build-pyinstaller/
+/build/lib/
+/*.egg-info/
 /.privacy-check-dmg/
 /packaging/icons/*-source-chroma.png
 *.spec.bak

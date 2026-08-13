@@ -1,0 +1,1 @@
+"""Bundled SpaceLens web interface."""

@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spacelens-disk-analyzer"
+version = "0.1.0"
+description = "Privacy-first local disk space analyzer for Windows and macOS"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "koikpi" }]
+keywords = ["disk-space", "disk-usage", "treemap", "duplicate-files", "privacy"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: MacOS",
+  "Operating System :: Microsoft :: Windows",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: System :: Filesystems",
+  "Topic :: Utilities",
+]
+
+[project.urls]
+Homepage = "https://github.com/koikpi/SpaceLens"
+Repository = "https://github.com/koikpi/SpaceLens"
+Issues = "https://github.com/koikpi/SpaceLens/issues"
+
+[project.scripts]
+spacelens = "local_server:main"
+
+[tool.setuptools]
+py-modules = ["local_server"]
+
+[tool.setuptools.packages.find]
+include = ["local"]
+
+[tool.setuptools.package-data]
+local = ["index.html"]

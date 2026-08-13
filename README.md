@@ -24,6 +24,17 @@ SpaceLens is a privacy-focused disk space analyzer that runs entirely on your co
 
 On Windows, extract the entire ZIP and double-click `启动 SpaceLens.cmd`. On macOS, open the DMG and drag `SpaceLens.app` into Applications. Neither standalone build requires Python.
 
+### Install from the command line
+
+If Python 3.10+ is installed, [pipx](https://pipx.pypa.io/) can install and isolate SpaceLens directly from GitHub:
+
+```bash
+pipx install git+https://github.com/koikpi/SpaceLens.git
+spacelens
+```
+
+Upgrade later with `pipx upgrade spacelens-disk-analyzer`, or uninstall with `pipx uninstall spacelens-disk-analyzer`. Package-manager releases for Homebrew and WinGet are planned once the project has a stable release history.
+
 ## Features
 
 - Scan local disks, folders, external drives, and mounted network shares
@@ -92,6 +103,17 @@ SpaceLens 是一款完全在本机运行的磁盘空间分析器。它通过矩�
 - [macOS ARM64](https://github.com/koikpi/SpaceLens/releases/latest/download/SpaceLens-macOS-ARM64.dmg) — 适用于 Apple Silicon Mac
 
 Windows 用户请解压整个 ZIP 后双击 `启动 SpaceLens.cmd`。macOS 用户请打开 DMG，并将 `SpaceLens.app` 拖入“应用程序”。独立版本均不需要安装 Python。
+
+### 从命令行安装
+
+如果已安装 Python 3.10 或更高版本，可以用 [pipx](https://pipx.pypa.io/) 直接从 GitHub 安装并隔离运行环境：
+
+```bash
+pipx install git+https://github.com/koikpi/SpaceLens.git
+spacelens
+```
+
+以后可用 `pipx upgrade spacelens-disk-analyzer` 升级，或用 `pipx uninstall spacelens-disk-analyzer` 卸载。等项目积累稳定版本后，再提交 Homebrew 和 WinGet 软件源会更合适。
 
 ## 功能
 

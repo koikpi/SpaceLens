@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import ctypes
 import gzip
 import hashlib
@@ -26,7 +27,7 @@ BUNDLE_ROOT = Path(getattr(sys, "_MEIPASS", SOURCE_ROOT))
 
 
 def application_data_root():
-    if not getattr(sys, "frozen", False):
+    if not getattr(sys, "frozen", False) and (SOURCE_ROOT / ".git").exists():
         return SOURCE_ROOT
     if sys.platform == "win32":
         return Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local")) / "SpaceLens"
@@ -840,18 +841,34 @@ class Handler(SimpleHTTPRequestHandler):
         self.send_json({"ok": True, "path": path}, 202)
 
 
-if __name__ == "__main__":
+def main(argv=None):
+    parser = argparse.ArgumentParser(
+        prog="spacelens",
+        description="Privacy-first local disk space analyzer for Windows and macOS.",
+    )
+    parser.add_argument("--port", type=int, default=int(os.environ.get("SPACELENS_PORT", "8765")), help="local HTTP port (default: 8765)")
+    parser.add_argument("--no-browser", action="store_true", help="do not open the browser automatically")
+    args = parser.parse_args(argv)
     for stream in (sys.stdout, sys.stderr):
         try:
             stream.reconfigure(encoding="utf-8", errors="replace")
         except (AttributeError, OSError):
             pass
-    port = int(os.environ.get("SPACELENS_PORT", "8765"))
+    port = args.port
     address = f"http://127.0.0.1:{port}"
     system_name = "macOS" if sys.platform == "darwin" else "Windows" if sys.platform == "win32" else sys.platform
     print(f"SpaceLens {system_name} 本地版已启动：{address}")
     print("关闭此窗口即可停止。所有扫描结果和文件索引仅保存在本机。")
     server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
-    if os.environ.get("SPACELENS_NO_BROWSER") != "1":
+    if not args.no_browser and os.environ.get("SPACELENS_NO_BROWSER") != "1":
         threading.Timer(0.8, lambda: webbrowser.open(address)).start()
-    server.serve_forever()
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("\nSpaceLens stopped.")
+    finally:
+        server.server_close()
+
+
+if __name__ == "__main__":
+    main()
