@@ -51,6 +51,31 @@ duplicate_state = {
 }
 
 
+def open_app_url(address: str) -> bool:
+    """Open the local UI with the operating system's native URL handler."""
+    try:
+        if sys.platform == "darwin":
+            completed = subprocess.run(
+                ["/usr/bin/open", address],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False,
+                timeout=10,
+            )
+            if completed.returncode == 0:
+                return True
+        elif sys.platform == "win32":
+            os.startfile(address)  # type: ignore[attr-defined]
+            return True
+    except (OSError, subprocess.SubprocessError):
+        pass
+
+    try:
+        return bool(webbrowser.open(address, new=2))
+    except webbrowser.Error:
+        return False
+
+
 def snapshot_path(snapshot_id: str):
     if not snapshot_id or any(c not in "0123456789abcdef" for c in snapshot_id):
         raise ValueError("Invalid snapshot id")
@@ -861,7 +886,9 @@ def main(argv=None):
     print("关闭此窗口即可停止。所有扫描结果和文件索引仅保存在本机。")
     server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
     if not args.no_browser and os.environ.get("SPACELENS_NO_BROWSER") != "1":
-        threading.Timer(0.8, lambda: webbrowser.open(address)).start()
+        browser_timer = threading.Timer(0.8, open_app_url, args=(address,))
+        browser_timer.daemon = True
+        browser_timer.start()
     try:
         server.serve_forever()
     except KeyboardInterrupt:

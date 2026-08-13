@@ -65,6 +65,41 @@ class ScannerTests(unittest.TestCase):
         self.assertEqual(calls[0][0][0], ["open", "-R", "/Volumes/Share/video.mov"])
 
 
+class BrowserLaunchTests(unittest.TestCase):
+    def test_macos_uses_native_open_command(self):
+        completed = subprocess.CompletedProcess([], 0)
+        with (
+            patch.object(local_server.sys, "platform", "darwin"),
+            patch.object(local_server.subprocess, "run", return_value=completed) as run,
+            patch.object(local_server.webbrowser, "open") as fallback,
+        ):
+            self.assertTrue(local_server.open_app_url("http://127.0.0.1:8765"))
+
+        self.assertEqual(run.call_args.args[0], ["/usr/bin/open", "http://127.0.0.1:8765"])
+        fallback.assert_not_called()
+
+    def test_windows_uses_native_url_handler(self):
+        with (
+            patch.object(local_server.sys, "platform", "win32"),
+            patch.object(local_server.os, "startfile", create=True) as startfile,
+            patch.object(local_server.webbrowser, "open") as fallback,
+        ):
+            self.assertTrue(local_server.open_app_url("http://127.0.0.1:8765"))
+
+        startfile.assert_called_once_with("http://127.0.0.1:8765")
+        fallback.assert_not_called()
+
+    def test_native_failure_falls_back_to_webbrowser(self):
+        with (
+            patch.object(local_server.sys, "platform", "darwin"),
+            patch.object(local_server.subprocess, "run", side_effect=OSError),
+            patch.object(local_server.webbrowser, "open", return_value=True) as fallback,
+        ):
+            self.assertTrue(local_server.open_app_url("http://127.0.0.1:8765"))
+
+        fallback.assert_called_once_with("http://127.0.0.1:8765", new=2)
+
+
 class HttpSmokeTests(unittest.TestCase):
     def test_static_page_and_drives_api(self):
         expected = [{"path": "/", "total": 10, "free": 4, "used": 6, "remote": None, "is_network": False}]
