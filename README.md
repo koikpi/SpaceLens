@@ -8,6 +8,14 @@
 
 SpaceLens 是一款完全在本机运行的磁盘空间分析器。它通过矩形树图、目录列表和容量条帮助你发现大文件、重复文件和可清理空间。
 
+## 界面预览
+
+![SpaceLens 矩形树图演示](docs/screenshots/treemap-demo.png)
+
+![SpaceLens 最大文件列表演示](docs/screenshots/largest-files-demo.png)
+
+> 截图来自真实运行的 SpaceLens，但只扫描专门生成的合成演示目录。画面中的文件名、路径和容量均不属于真实用户数据。
+
 ## 下载
 
 - [Windows x64](https://github.com/koikpi/SpaceLens/releases/latest/download/SpaceLens-Windows-x64.zip) — 适用于大多数 Intel/AMD Windows 10/11 电脑
@@ -68,6 +76,14 @@ npm test
 ## English
 
 SpaceLens is a privacy-focused disk space analyzer that runs entirely on your computer. Its interactive treemap, directory list, and capacity bars help you find large files, duplicates, and reclaimable space.
+
+## Interface preview
+
+![SpaceLens treemap using synthetic demo data](docs/screenshots/treemap-demo.png)
+
+![SpaceLens largest-files view using synthetic demo data](docs/screenshots/largest-files-demo.png)
+
+> These screenshots show the real SpaceLens application scanning a purpose-built synthetic demo folder. Every visible file name, path, and size is fictional and contains no user data.
 
 ## Downloads
 

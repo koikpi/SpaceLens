@@ -45,6 +45,8 @@ next-env.d.ts
 __pycache__/
 *.pyc
 /saved_scans/
+/.demo-data/
+/docs/screenshots/*-raw.png
 /release/
 /build-pyinstaller/
 /.privacy-check-dmg/
