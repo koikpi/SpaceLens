@@ -4,7 +4,76 @@
   <img src="packaging/icons/SpaceLens.png" width="160" alt="SpaceLens icon">
 </p>
 
-**中文** | [English](#english)
+**English** | [Chinese](#chinese)
+
+SpaceLens is a privacy-focused disk space analyzer that runs entirely on your computer. Its interactive treemap, directory list, and capacity bars help you find large files, duplicates, and reclaimable space.
+
+## Interface preview
+
+![SpaceLens treemap using synthetic demo data](docs/screenshots/treemap-demo-en.png)
+
+![SpaceLens largest-files view using synthetic demo data](docs/screenshots/largest-files-demo-en.png)
+
+> These screenshots show the real SpaceLens application scanning a purpose-built synthetic demo folder. Every visible file name, path, and size is fictional and contains no user data.
+
+## Downloads
+
+- [Windows x64](https://github.com/koikpi/SpaceLens/releases/latest/download/SpaceLens-Windows-x64.zip) — most Intel/AMD Windows 10/11 PCs
+- [Windows ARM64](https://github.com/koikpi/SpaceLens/releases/latest/download/SpaceLens-Windows-ARM64.zip) — ARM Windows devices such as Snapdragon PCs
+- [macOS ARM64](https://github.com/koikpi/SpaceLens/releases/latest/download/SpaceLens-macOS-ARM64.dmg) — Apple Silicon Macs
+
+On Windows, extract the entire ZIP and double-click `启动 SpaceLens.cmd`. On macOS, open the DMG and drag `SpaceLens.app` into Applications. Neither standalone build requires Python.
+
+## Features
+
+- Scan local disks, folders, external drives, and mounted network shares
+- Explore usage with a treemap, hierarchy list, capacity bars, and large-file search
+- Detect duplicate files using quick comparison, SHA-256, or byte-by-byte checks
+- Save and reopen scan snapshots locally
+- Reveal files in Windows Explorer or macOS Finder
+- Native packages for Windows x64, Windows ARM64, and macOS ARM64
+
+## Privacy and security
+
+SpaceLens binds its local service to `127.0.0.1` only. It does not expose the service to your LAN or the internet, and it does not upload scan results, file names, paths, or disk information.
+
+Scan data stays on your device:
+
+- Windows: `%LOCALAPPDATA%\SpaceLens\saved_scans`
+- macOS: `~/Library/Application Support/SpaceLens/saved_scans`
+
+Scan snapshots, environment files, build caches, and release archives are excluded from Git. Before sharing logs, screenshots, or application data, check them for real file names and full local paths.
+
+## Run from source
+
+Python 3.10 or newer is required:
+
+```bash
+git clone https://github.com/koikpi/SpaceLens.git
+cd SpaceLens
+python local_server.py
+```
+
+The service starts at <http://127.0.0.1:8765> and opens your default browser. See [MACOS.md](MACOS.md) for first-launch security guidance and [CROSS_PLATFORM_TESTING.md](CROSS_PLATFORM_TESTING.md) for cross-platform packaging details.
+
+## Web UI development
+
+Node.js 22.13 or newer is required:
+
+```bash
+npm install
+npm run dev
+npm run lint
+npm test
+```
+
+## License
+
+[MIT License](LICENSE)
+
+---
+
+## Chinese
 
 SpaceLens 是一款完全在本机运行的磁盘空间分析器。它通过矩形树图、目录列表和容量条帮助你发现大文件、重复文件和可清理空间。
 
@@ -68,74 +137,5 @@ npm test
 ```
 
 ## 许可证
-
-[MIT License](LICENSE)
-
----
-
-## English
-
-SpaceLens is a privacy-focused disk space analyzer that runs entirely on your computer. Its interactive treemap, directory list, and capacity bars help you find large files, duplicates, and reclaimable space.
-
-## Interface preview
-
-![SpaceLens treemap using synthetic demo data](docs/screenshots/treemap-demo.png)
-
-![SpaceLens largest-files view using synthetic demo data](docs/screenshots/largest-files-demo.png)
-
-> These screenshots show the real SpaceLens application scanning a purpose-built synthetic demo folder. Every visible file name, path, and size is fictional and contains no user data.
-
-## Downloads
-
-- [Windows x64](https://github.com/koikpi/SpaceLens/releases/latest/download/SpaceLens-Windows-x64.zip) — most Intel/AMD Windows 10/11 PCs
-- [Windows ARM64](https://github.com/koikpi/SpaceLens/releases/latest/download/SpaceLens-Windows-ARM64.zip) — ARM Windows devices such as Snapdragon PCs
-- [macOS ARM64](https://github.com/koikpi/SpaceLens/releases/latest/download/SpaceLens-macOS-ARM64.dmg) — Apple Silicon Macs
-
-On Windows, extract the entire ZIP and double-click `启动 SpaceLens.cmd`. On macOS, open the DMG and drag `SpaceLens.app` into Applications. Neither standalone build requires Python.
-
-## Features
-
-- Scan local disks, folders, external drives, and mounted network shares
-- Explore usage with a treemap, hierarchy list, capacity bars, and large-file search
-- Detect duplicate files using quick comparison, SHA-256, or byte-by-byte checks
-- Save and reopen scan snapshots locally
-- Reveal files in Windows Explorer or macOS Finder
-- Native packages for Windows x64, Windows ARM64, and macOS ARM64
-
-## Privacy and security
-
-SpaceLens binds its local service to `127.0.0.1` only. It does not expose the service to your LAN or the internet, and it does not upload scan results, file names, paths, or disk information.
-
-Scan data stays on your device:
-
-- Windows: `%LOCALAPPDATA%\SpaceLens\saved_scans`
-- macOS: `~/Library/Application Support/SpaceLens/saved_scans`
-
-Scan snapshots, environment files, build caches, and release archives are excluded from Git. Before sharing logs, screenshots, or application data, check them for real file names and full local paths.
-
-## Run from source
-
-Python 3.10 or newer is required:
-
-```bash
-git clone https://github.com/koikpi/SpaceLens.git
-cd SpaceLens
-python local_server.py
-```
-
-The service starts at <http://127.0.0.1:8765> and opens your default browser. See [MACOS.md](MACOS.md) for first-launch security guidance and [CROSS_PLATFORM_TESTING.md](CROSS_PLATFORM_TESTING.md) for cross-platform packaging details.
-
-## Web UI development
-
-Node.js 22.13 or newer is required:
-
-```bash
-npm install
-npm run dev
-npm run lint
-npm test
-```
-
-## License
 
 [MIT License](LICENSE)
