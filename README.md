@@ -34,6 +34,9 @@ SpaceLens is a privacy-focused disk space analyzer that runs entirely on your co
 
 On Windows, extract the entire ZIP and double-click `启动 SpaceLens.cmd`. On macOS, open the DMG and drag `SpaceLens.app` into Applications. Neither standalone build requires Python.
 
+> [!IMPORTANT]
+> **First launch on macOS:** the current macOS build is ad-hoc signed and has not been notarized by Apple, so Gatekeeper may say that Apple cannot verify SpaceLens. Click **Done** instead of moving the app to Trash, then open **System Settings → Privacy & Security**, scroll to **Security**, and click **Open Anyway** for SpaceLens. Enter your Mac password and confirm **Open**. You can also Control-click SpaceLens in Applications and choose **Open**. See [Apple's official guidance](https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unknown-developer-mh40616/mac) and the detailed [macOS instructions](MACOS.md). Only bypass this warning for the official download from this repository.
+
 ### Install from the command line
 
 If Python 3.10+ is installed, [pipx](https://pipx.pypa.io/) can install and isolate SpaceLens directly from GitHub:
@@ -113,6 +116,9 @@ SpaceLens 是一款完全在本机运行的磁盘空间分析器。它通过矩�
 - [macOS ARM64](https://github.com/koikpi/SpaceLens/releases/latest/download/SpaceLens-macOS-ARM64.dmg) — 适用于 Apple Silicon Mac
 
 Windows 用户请解压整个 ZIP 后双击 `启动 SpaceLens.cmd`。macOS 用户请打开 DMG，并将 `SpaceLens.app` 拖入“应用程序”。独立版本均不需要安装 Python。
+
+> [!IMPORTANT]
+> **macOS 首次启动：** 当前 macOS 构建采用临时签名，尚未经过 Apple 公证，因此系统可能提示“Apple 无法验证 SpaceLens”。请点击**“完成”**，不要选择“移到废纸篓”；随后打开**“系统设置 → 隐私与安全性”**，向下滚动到“安全性”，找到 SpaceLens 并点击**“仍要打开”**，输入 Mac 登录密码后再次确认“打开”。也可以在“应用程序”中按住 Control 点击 SpaceLens，然后选择“打开”。参见 [Apple 官方说明](https://support.apple.com/zh-cn/guide/mac-help/mh40616/mac) 和项目的 [macOS 详细指南](MACOS.md)。仅应对本仓库官方 Release 下载的版本执行此操作。
 
 ### 从命令行安装
 
