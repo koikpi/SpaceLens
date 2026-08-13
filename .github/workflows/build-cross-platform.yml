@@ -6,7 +6,7 @@ on:
       release_tag:
         description: GitHub Release tag
         required: true
-        default: v0.1.3
+        default: v0.1.4
 
 permissions:
   contents: read
@@ -105,6 +105,7 @@ jobs:
         shell: bash
         run: |
           test "$(uname -m)" = "arm64"
+          bash -n packaging/macos/SpaceLens-launcher
           python -c "import platform; assert platform.machine() == 'arm64'; print(platform.platform(), platform.machine())"
           python -m py_compile local_server.py
           python -m unittest discover -s tests -p "test_local_server.py" -v
@@ -130,16 +131,17 @@ jobs:
           sips -z 512 512 packaging/icons/SpaceLens.png --out "$iconset/icon_512x512.png"
           cp packaging/icons/SpaceLens.png "$iconset/icon_512x512@2x.png"
           iconutil -c icns "$iconset" -o "$app/Contents/Resources/SpaceLens.icns"
-          cp dist/SpaceLens "$app/Contents/MacOS/SpaceLens"
+          cp dist/SpaceLens "$app/Contents/MacOS/SpaceLens-bin"
+          cp packaging/macos/SpaceLens-launcher "$app/Contents/MacOS/SpaceLens"
           cp packaging/macos/Info.plist "$app/Contents/Info.plist"
           cp README.md MACOS.md LICENSE "$app/Contents/Resources/"
-          chmod +x "$app/Contents/MacOS/SpaceLens"
+          chmod +x "$app/Contents/MacOS/SpaceLens" "$app/Contents/MacOS/SpaceLens-bin"
           codesign --force --deep --sign - "$app"
           codesign --verify --deep --strict --verbose=2 "$app"
       - name: Smoke-test packaged program
         shell: bash
         run: |
-          executable="release/SpaceLens.app/Contents/MacOS/SpaceLens"
+          executable="release/SpaceLens.app/Contents/MacOS/SpaceLens-bin"
           file "$executable" | tee /tmp/spacelens-app-file.txt
           grep -q "arm64" /tmp/spacelens-app-file.txt
           python tests/smoke_packaged.py "$executable"
@@ -160,8 +162,9 @@ jobs:
             -mountpoint /tmp/spacelens-dmg \
             release/SpaceLens-macOS-ARM64.dmg
           test -x /tmp/spacelens-dmg/SpaceLens.app/Contents/MacOS/SpaceLens
+          test -x /tmp/spacelens-dmg/SpaceLens.app/Contents/MacOS/SpaceLens-bin
           test -L /tmp/spacelens-dmg/Applications
-          file /tmp/spacelens-dmg/SpaceLens.app/Contents/MacOS/SpaceLens | grep -q "arm64"
+          file /tmp/spacelens-dmg/SpaceLens.app/Contents/MacOS/SpaceLens-bin | grep -q "arm64"
           hdiutil detach /tmp/spacelens-dmg
       - uses: actions/upload-artifact@v4
         with:
