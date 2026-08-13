@@ -192,8 +192,19 @@ jobs:
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release upload "$RELEASE_TAG" release-assets/* --clobber
           else
+            cat > /tmp/spacelens-release-notes.md <<'EOF'
+          Windows x64, Windows ARM64, and macOS Apple Silicon packages are available below. macOS users can download the DMG directly.
+
+          All builds are produced by GitHub Actions. SpaceLens runs locally and does not upload scan results, file paths, or disk information.
+
+          ---
+
+          Windows x64、Windows ARM64 与 macOS Apple Silicon 安装包见下方。macOS 用户可以直接下载 DMG。
+
+          所有安装包均由 GitHub Actions 构建。SpaceLens 完全在本机运行，不会上传扫描结果、文件路径或磁盘信息。
+          EOF
             gh release create "$RELEASE_TAG" release-assets/* \
               --target "$GITHUB_SHA" \
               --title "SpaceLens ${RELEASE_TAG}" \
-              --notes "Windows x64、Windows ARM64 与 macOS Apple Silicon 安装包。macOS 用户请直接下载 DMG。"
+              --notes-file /tmp/spacelens-release-notes.md
           fi
