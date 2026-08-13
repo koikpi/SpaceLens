@@ -6,7 +6,17 @@
 
 **English** | [Chinese](#chinese)
 
+[![Latest release](https://img.shields.io/github/v/release/koikpi/SpaceLens?display_name=tag&sort=semver)](https://github.com/koikpi/SpaceLens/releases/latest)
+[![Build](https://github.com/koikpi/SpaceLens/actions/workflows/build-cross-platform.yml/badge.svg)](https://github.com/koikpi/SpaceLens/actions/workflows/build-cross-platform.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Windows](https://img.shields.io/badge/Windows-x64%20%7C%20ARM64-357EC7)](https://github.com/koikpi/SpaceLens/releases/latest)
+[![macOS](https://img.shields.io/badge/macOS-Apple%20Silicon-111111)](https://github.com/koikpi/SpaceLens/releases/latest)
+
 SpaceLens is a privacy-focused disk space analyzer that runs entirely on your computer. Its interactive treemap, directory list, and capacity bars help you find large files, duplicates, and reclaimable space.
+
+**Fully local · No telemetry · Windows & macOS · MIT licensed**
+
+[Download for Windows](https://github.com/koikpi/SpaceLens/releases/latest/download/SpaceLens-Windows-x64.zip) · [Download for macOS](https://github.com/koikpi/SpaceLens/releases/latest/download/SpaceLens-macOS-ARM64.dmg) · [Command-line install](#install-from-the-command-line)
 
 ## Interface preview
 
